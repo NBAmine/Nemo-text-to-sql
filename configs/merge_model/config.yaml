@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - /base
+  - /merge_schema
+  - _self_
+
+model:
+  base_id: mistralai/Mistral-Nemo-Instruct-2407
+  dtype: auto
+  device_map: "cuda:0"
+
+hub:
+  adapters_repo_id: ${hub.user}/nemo-text-to-sql-phase2-w-context
+  repo_id: ${hub.user}/${hub.finetuned_model_id}
+  private: true
+
+paths:
+  # Saved before upload and retained afterward, including when publication fails.
+  backup_output_path: artifacts/merged_model
+
+system:
+  required_env_vars:
+    - HF_TOKEN
+

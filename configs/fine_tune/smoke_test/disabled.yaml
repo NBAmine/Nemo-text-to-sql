@@ -1,0 +1,8 @@
+# @package _global_
+# Smoke-test group - DISABLED (default production mode).
+# All fields are null / false so the training script skips every guard.
+smoke_test:
+  enabled: false
+  max_train_samples: null   # use full dataset
+  max_eval_samples: null    # use full dataset
+  max_steps: -1             # let SFTConfig default (run full epochs)

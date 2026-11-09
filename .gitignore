@@ -1,0 +1,45 @@
+scripts/*.json
+scripts/.env
+
+.secrets.env
+scripts/stratify_test.py
+TO-DO.txt
+__pycache__
+spider
+spider.zip
+
+artifacts/
+logs/
+jobs/
+docs/
+.*/
+err/
+out/
+tests/
+tmp/
+
+# Local credentials; retain shareable placeholder templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.secrets.env.*
+!.secrets.env.example
+
+# Standalone training, quantization, and experiment outputs.
+adapters/
+quantized-models/
+checkpoints/
+wandb/
+outputs/
+multirun/
+cache/
+
+# Model weights and serialized training state, including custom output paths.
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.gguf

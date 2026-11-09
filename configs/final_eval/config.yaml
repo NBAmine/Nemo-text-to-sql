@@ -1,0 +1,54 @@
+# @package _global_
+defaults:
+  - /base
+  - /base_config
+  - _self_
+
+model:
+  device_map: "cuda:0"
+
+dataset:
+  id: "NBAmine/xlangai-spider-test-with-context"
+
+wandb:
+  ds_artifact_name: "spider-test-dataset"
+  ds_artifact_alias: "latest"
+  ds_artifact_path: "${wandb.entity}/${wandb.project_name}/${wandb.ds_artifact_name}:${wandb.ds_artifact_alias}"
+
+training:
+  batch_size: 8
+  max_new_tokens: 2048
+
+eval_paths:
+  test_db_path: "spider/spider_data/test_database"
+  test_table_path: "spider/spider_data/test_tables.json"
+  artifacts_output_path: "artifacts/evaluation"
+  etype: "all"
+  # Two bundled pilot_1 references have ORDER BY expressions outside the parser grammar.
+  # Retain legacy parsing with warnings for this test split.
+  strict_parsing: false
+
+system:
+  required_env_vars:
+    - HF_TOKEN
+    - WANDB_API_KEY
+
+runs:
+  base:
+    model_id: "mistralai/Mistral-Nemo-Instruct-2407"
+    run_name: "base-instruct-evaluation"
+  original:
+    model_id: "${hub.user}/${hub.finetuned_model_id}"
+    run_name: "original-evaluation"
+  awq:
+    model_id: "${hub.user}/mistral-nemo-text-to-sql-awq"
+    run_name: "awq-4bit-evaluation"
+  gptq:
+    model_id: "${hub.user}/mistral-nemo-text-to-sql-gptq"
+    run_name: "gptq-evaluation"
+  fp8:
+    model_id: "${hub.user}/mistral-nemo-text-to-sql-fp8"
+    run_name: "fp8-evaluation"
+
+dry_run: false
+dry_run_samples: 40

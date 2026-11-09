@@ -1,0 +1,35 @@
+defaults:
+  - /base       # Loads configs/base.yaml into the config root
+  - _self_
+ 
+model:
+  base_id: mistralai/Mistral-Nemo-Instruct-2407
+  tokenizer_max_length: 2048
+
+early_stopping:
+  enabled: true
+  patience: 3              # number of *evaluations* without improvement, not steps
+  threshold: 0.0           # min improvement to count as progress
+
+training:
+  metric_for_best_model: eval_loss
+  greater_is_better: false
+  load_best_model_at_end: true
+ 
+# auto resumes or starts a new attempt after confirmed absence; required never starts fresh.
+# For a new/inaccessible Hub repository, explicitly choose fresh on the first run.
+resume:
+  mode: auto
+  source: auto  # auto | local | hub; auto compares local + Hub within one attempt
+  allow_world_size_change: true
+
+hub:
+  phase1: 
+    adapters_repo_id: ${hub.user}/nemo-text-to-sql-phase1
+    dataset_repo_id: "${hub.user}/gretelai-subset-stratified"
+
+system:
+  required_env_vars:
+    - HF_TOKEN
+    - WANDB_API_KEY
+  monitor_interval: 30

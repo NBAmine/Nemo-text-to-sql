@@ -1,0 +1,81 @@
+# @package _global_
+defaults:
+  - phase2_w_ctx_schema
+  - config                    # Loads config.yaml into the config root
+  - _self_
+  - /fine_tune/smoke_test: disabled      # Override with fine_tune/smoke_test=enabled for a fast sanity-check run
+
+# --- Model & Tokenizer Configuration ---
+model:
+  attn_implementation: "flash_attention_2"
+  torch_dtype: "bf16"                       # Loaded dtype
+  compute_dtype: "bf16"                     # bnb_4bit_compute_dtype
+  quantization:
+    load_in_4bit: true
+    bnb_4bit_quant_type: "nf4"
+    bnb_4bit_use_double_quant: true
+
+# --- Dataset Configuration ---
+dataset:
+  id: "NBAmine/xlangai-spider-with-context"
+  seed: 42  # Trainer data sampling seed; system.seed controls training RNGs
+  text_field: "text"
+
+# --- Spider evaluation paths (used by SpiderEvaluationCallback) ---
+spider:
+  db_path: "./spider/spider_data/database"
+  table_path: "./spider/spider_data/tables.json"
+  output_dir: "artifacts/evaluation"
+  etype: "all"
+
+# --- Hyperparameters ---
+hyperparameters:
+  epochs: 5
+  learning_rate: 1.0e-5
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 4
+  optim: "adamw_torch_fused"
+  warmup_steps: 100
+  weight_decay: 0.01
+  lr_scheduler_type: "cosine"
+  max_steps: -1             # -1 = run full epochs; set by smoke_test=enabled to 5
+
+# --- Hugging Face Hub & Artifact Paths ---
+hub:
+  repo_id: "${hub.user}/nemo-text-to-sql-phase2-w-context"
+  phase1_adapters_repo_id: "${hub.phase1.adapters_repo_id}"
+  strategy: "checkpoint"
+  private: true
+  push_to_hub: true
+
+paths:
+  adapter_output_path: "./artifacts/adapters/adapter-phase2-w-context"
+  smoke_adapter_output_path: "./artifacts/adapters/smoke-phase2-w-context"
+
+# --- Weights & Biases Logging ---
+wandb:
+  run_name: phase2-logical-alignment-w-context
+  tags:
+    - "phase2"
+    - "logical-alignment-w-context"
+    - "spider-with-context"
+    - "mistral-nemo"
+    - "qlora"
+  notes: "Training on xlangai/spider-with-context samples for logic injection with schema context."
+  samples_num: 8
+
+# --- Checkpointing & Evaluation Strategies ---
+training:
+  fp16: false
+  bf16: true
+  logging_steps: 50
+  eval_strategy: "steps"
+  eval_steps: 500
+  save_strategy: "steps"
+  save_steps: 500
+  save_total_limit: 2
+  load_best_model_at_end: true
+  gradient_checkpointing: false
+  train_sampling_strategy: group_by_length  # group_by_length | random
+  ddp_find_unused_parameters: false

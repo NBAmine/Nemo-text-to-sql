@@ -1,0 +1,44 @@
+# @package _global_
+# Smoke-test group - ENABLED override.
+system:
+  required_env_vars: []
+
+smoke_test:
+  enabled: true
+  max_train_samples: 200                # tiny slice – just enough to warm up the dataloader
+  max_eval_samples: 64
+  max_steps: 5                         # hard cap; overrides num_train_epochs for speed
+
+resume:
+  mode: fresh                         # each smoke invocation starts a new attempt
+
+# Exercise logging locally; use wandb.mode=online to check the service.
+wandb:
+  mode: online
+
+# --- Override hyperparameters for a minimal, fast run ---
+hyperparameters:
+  epochs: 1                           # ignored when max_steps is set, but kept for SFTConfig consistency
+  max_steps: 5
+  per_device_train_batch_size: 1
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 1      # no accumulation – immediate update each step
+
+# --- Override training loop knobs ---
+training:
+  logging_steps: 1
+  eval_strategy: "steps"
+  eval_steps: 2
+  save_strategy: "steps"                  # never checkpoint during a smoke test
+  save_total_limit: 2
+  load_best_model_at_end: True        # requires save_strategy != "no" – must be false here
+  gradient_checkpointing: false        # speed
+
+# --- Never push artefacts during a smoke test ---
+hub:
+  push_to_hub: true
+  strategy: "end"                      # no-op value; won't be used since push_to_hub=false
+
+# --- Phase-specific smoke root; the resolver adds a unique attempt directory ---
+paths:
+  adapter_output_path: "${paths.smoke_adapter_output_path}"

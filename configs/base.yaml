@@ -1,0 +1,19 @@
+hub: 
+  user: NBAmine
+  finetuned_model_id: mistral-nemo-text-to-sql
+
+system:
+  seed: 42
+  monitor_interval: 5
+  resource_output_root: artifacts/resources
+
+sql_execution:
+  wait_time: 120.0  # SQL worker startup allowance in seconds.
+  
+wandb:
+  entity: nbamine-fsdm
+  project_name: text-to-sql
+
+hydra:
+  job:
+    chdir: false

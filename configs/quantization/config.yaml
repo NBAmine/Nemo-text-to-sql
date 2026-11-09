@@ -1,0 +1,30 @@
+# @package _global_
+defaults:
+  - quantization_schema
+  - /base # Loads configs/base.yaml into the config root
+  - _self_ 
+
+model:
+  quant_path: "./artifacts/quantized-models" # base dir
+  device_map: "cuda:0" # Single GPU; distributed runs use auto_offload per worker.
+
+hub:
+  private: true
+
+dataset:
+  repo_id: "${hub.user}/xlangai-spider-test-with-context"
+  split: "calibration"
+
+quantization:
+  max_seq_length: 2048
+  num_calibration_samples: all # Positive integer, or "all" to use the entire split
+  methods:
+    - "AWQ"
+    - "GPTQ"
+    - "FP8"
+  
+system:
+  required_env_vars:
+    - HF_TOKEN
+    - WANDB_API_KEY
+  monitor_interval: 1

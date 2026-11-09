@@ -1,0 +1,88 @@
+# @package _global_
+defaults:
+  - phase1_schema
+  - config                    # Loads config.yaml into the config root
+  - _self_
+  - /fine_tune/smoke_test: disabled      # Override with fine_tune/smoke_test=enabled for a fast sanity-check run
+
+# --- Model & Tokenizer Configuration ---
+model:
+  attn_implementation: "flash_attention_2"
+  torch_dtype: "bf16"                       # Loaded dtype
+  compute_dtype: "bf16"                     # bnb_4bit_compute_dtype
+  quantization:
+    load_in_4bit: true
+    bnb_4bit_quant_type: "nf4"
+    bnb_4bit_use_double_quant: true
+
+# --- Parameter-Efficient Fine-Tuning (PEFT / LoRA) ---
+peft:
+  r: 32
+  lora_alpha: 64
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# --- Dataset Configuration ---
+dataset:
+  id: "${hub.phase1.dataset_repo_id}"
+  seed: 42  # Trainer data sampling seed;
+  text_field: "text"
+
+# --- Hyperparameters ---
+hyperparameters:
+  epochs: 5
+  learning_rate: 1.0e-4
+  per_device_train_batch_size: 8
+  per_device_eval_batch_size: 8
+  gradient_accumulation_steps: 8
+  optim: "adamw_torch_fused"
+  warmup_steps: 100
+  weight_decay: 0.01
+  lr_scheduler_type: "cosine"
+  max_steps: -1             # -1 = run full epochs; set by smoke_test=enabled to 5
+
+# --- Hugging Face Hub & Artifact Paths ---
+hub:
+  repo_id: ${hub.phase1.adapters_repo_id}
+  strategy: "checkpoint"
+  private: true
+  push_to_hub: true
+
+paths:
+  adapter_output_path: "./artifacts/adapters/adapter-phase1"
+  smoke_adapter_output_path: "./artifacts/adapters/smoke-phase1"
+  
+# --- Weights & Biases Logging ---
+wandb:
+  run_name: phase1-syntax-anchoring
+  tags:
+    - "phase1"
+    - "syntax-anchoring"
+    - "mistral-nemo"
+    - "qlora"
+  notes: "Training on gretelai/synthetic_text_to_sql subset to fix SQL syntax before logic injection."
+  samples_num: 8          # Number of samples for the SQL Callback (should be less than eval samples for smoke_test)
+
+# --- Checkpointing & Evaluation Strategies ---
+training:
+  fp16: false
+  bf16: true
+  logging_steps: 50
+  eval_strategy: "steps"
+  eval_steps: 500
+  save_strategy: "steps"
+  save_steps: 500
+  save_total_limit: 2
+  load_best_model_at_end: true
+  gradient_checkpointing: false
+  train_sampling_strategy: group_by_length  # group_by_length | random
+  ddp_find_unused_parameters: false

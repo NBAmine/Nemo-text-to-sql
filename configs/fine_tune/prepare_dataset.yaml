@@ -1,0 +1,26 @@
+# @package _global_
+defaults:
+  - config
+  - prepare_dataset_schema
+  - _self_
+
+dataset:
+  source_id: "gretelai/synthetic_text_to_sql"
+  output_id: "${hub.phase1.dataset_repo_id}"
+  stratify_column: "sql_complexity"
+  # Fraction of each category's own rows to keep (0.0–1.0).
+  # Applied independently to both the "train" and "test" source splits.
+  # Example: CTEs: 1.0 → keep ALL CTE rows from train AND test.
+  complexity_sampling_rates:
+    basic SQL:          0.1
+    aggregation:        0.2
+    single join:        0.2
+    subqueries:         0.5
+    window functions:   0.5
+    multiple_joins:     0.5
+    set operations:     1
+    CTEs:               1
+
+hub:
+  # Push the resulting DatasetDict as a private repo
+  private: true
